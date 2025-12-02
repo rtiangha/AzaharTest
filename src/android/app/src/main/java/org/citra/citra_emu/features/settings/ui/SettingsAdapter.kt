@@ -15,6 +15,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.text.format.DateFormat
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
@@ -373,6 +374,11 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
             valueFrom = item.min.toFloat()
             valueTo = item.max.toFloat()
             value = sliderProgress
+            if (!item.showSlider) {
+                isEnabled = false
+                visibility = View.GONE
+            }
+
             textSliderValue?.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     var textValue = s.toString().toFloatOrNull()

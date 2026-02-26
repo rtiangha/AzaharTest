@@ -20,7 +20,7 @@ plugins {
  * next 680 years.
  */
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
-val abiFilter = listOf("arm64-v8a", "x86_64")
+val abiFilter = listOf("arm64-v8a")
 
 val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/downloadedJniLibs"
 
@@ -65,7 +65,7 @@ android {
         // applicationId = "org.azahar_emu.azahar"
         applicationId = "io.github.lime3ds.android"
 
-        minSdk = 28
+        minSdk = 35 
         targetSdk = 35
         versionCode = autoVersion
         versionName = getGitVersion()
@@ -80,6 +80,7 @@ android {
                 arguments(
                     "-DENABLE_QT=0", // Don't use QT
                     "-DENABLE_SDL2=0", // Don't use SDL
+                    "-DCMAKE_C_FLAGS=-O3 -march=armv8.2-a+simd",
                     "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page
                     // sizes
@@ -307,11 +308,6 @@ android.applicationVariants.configureEach {
             project.copy {
                 from(variant.outputs.first().outputFile.parentFile)
                 include("*.apk")
-                into(layout.buildDirectory.dir("bundle"))
-            }
-            project.copy {
-                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
-                include("*.aab")
                 into(layout.buildDirectory.dir("bundle"))
             }
         }

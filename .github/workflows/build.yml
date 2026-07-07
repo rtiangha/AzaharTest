@@ -12,7 +12,7 @@ jobs:
     if: ${{ !github.head_ref }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Pack
@@ -39,7 +39,7 @@ jobs:
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up cache
@@ -80,7 +80,7 @@ jobs:
       OS: macos
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up cache
@@ -116,7 +116,7 @@ jobs:
       OS: macos
       TARGET: universal
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download x86_64 build from cache
         uses: actions/cache/restore@v4
         with:
@@ -157,7 +157,7 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up cache
@@ -228,7 +228,7 @@ jobs:
       OS: android
       TARGET: universal
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set up cache
@@ -276,7 +276,7 @@ jobs:
     container:
       image: docker:dind
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Build Docker image

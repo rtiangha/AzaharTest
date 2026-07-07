@@ -43,7 +43,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -84,7 +84,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -97,7 +97,7 @@ jobs:
       - name: Prepare outputs for caching
         run: cp -R build/bundle $OS-$TARGET
       - name: Cache outputs for universal build
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.OS }}-${{ env.TARGET }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -118,13 +118,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download x86_64 build from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.OS }}-x86_64
           key: ${{ runner.os }}-x86_64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           fail-on-cache-miss: true
       - name: Download ARM64 build from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.OS }}-arm64
           key: ${{ runner.os }}-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -161,7 +161,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -232,7 +232,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches

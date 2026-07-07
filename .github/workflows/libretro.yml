@@ -42,7 +42,7 @@ jobs:
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake $CORE_ARGS -DANDROID_PLATFORM=android-$API_LEVEL -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_static -DANDROID_ABI=$ANDROID_ABI . -B $BUILD_DIR
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro_android.so
@@ -63,7 +63,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.so
@@ -92,7 +92,7 @@ jobs:
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
                   ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)"
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
@@ -118,7 +118,7 @@ jobs:
           cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
@@ -139,7 +139,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
@@ -160,7 +160,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib

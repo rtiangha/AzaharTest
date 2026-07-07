@@ -18,7 +18,7 @@ jobs:
       - name: Pack
         run: ./.ci/source.sh
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: source
           path: artifacts/
@@ -62,7 +62,7 @@ jobs:
           mv artifacts/azahar.AppImage artifacts/azahar-wayland.AppImage
       - name: Upload
         if: ${{ contains(matrix.target, 'appimage') }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -104,7 +104,7 @@ jobs:
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -136,7 +136,7 @@ jobs:
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -214,7 +214,7 @@ jobs:
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -266,7 +266,7 @@ jobs:
         env:
           UNPACKED: 1
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
@@ -286,7 +286,7 @@ jobs:
           mkdir -p artifacts
           mv build/*.dockerimage artifacts/
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker
           path: artifacts/

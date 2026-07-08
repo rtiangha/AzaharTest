@@ -23,7 +23,7 @@ jobs:
       BUILD_DIR: build/android-arm64-v8a
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Set tag name
@@ -42,7 +42,7 @@ jobs:
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake $CORE_ARGS -DANDROID_PLATFORM=android-$API_LEVEL -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_static -DANDROID_ABI=$ANDROID_ABI . -B $BUILD_DIR
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro_android.so
@@ -55,7 +55,7 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 -DENABLE_LTO=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Build
@@ -63,7 +63,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.so
@@ -78,7 +78,7 @@ jobs:
       IMAGE: git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:mingw12
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Build in cross-container
@@ -92,7 +92,7 @@ jobs:
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
                   ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)"
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
@@ -108,7 +108,7 @@ jobs:
       BUILD_DIR: build/osx-${{ matrix.target }}
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Install tools
@@ -118,7 +118,7 @@ jobs:
           cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
@@ -131,7 +131,7 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Build
@@ -139,7 +139,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
@@ -152,7 +152,7 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - name: Build
@@ -160,7 +160,7 @@ jobs:
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib

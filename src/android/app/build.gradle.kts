@@ -80,7 +80,7 @@ android {
                 arguments(
                     "-DENABLE_QT=0", // Don't use QT
                     "-DENABLE_SDL2=0", // Don't use SDL
-                    "-DCMAKE_C_FLAGS=-O3 -march=armv8.2-a+simd",
+                    "-DCMAKE_C_FLAGS=-O3 -march=armv8.2-a+crypto+dotprod+fp16+rcpc",
                     "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page
                     // sizes

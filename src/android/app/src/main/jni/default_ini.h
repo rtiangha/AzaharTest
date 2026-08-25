@@ -433,7 +433,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(volume) BOOST_HANA_STRING(R"(
 
 # Which audio output type to use.
-# 0 (default): Auto-select, 1: No audio output, 2: Cubeb (if available), 3: OpenAL (if available), 4: SDL2 (if available)
+# 0 (default): Auto-select, 1: No audio output, 2: Cubeb (if available), 3: OpenAL (if available), 4: SDL2 (if available), 5: Oboe (if avaliable)
+output_type =
 )") DECLARE_KEY(output_type) BOOST_HANA_STRING(R"(
 
 # Which audio output device to use.
@@ -441,7 +442,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(output_device) BOOST_HANA_STRING(R"(
 
 # Which audio input type to use.
-# 0 (default): Auto-select, 1: No audio input, 2: Static noise, 3: Cubeb (if available), 4: OpenAL (if available)
+# 0 (default): Auto-select, 1: No audio input, 2: Static noise, 3: Cubeb (if available), 4: OpenAL (if available), 5: Oboe (if avaliable)
+output_type =
 )") DECLARE_KEY(input_type) BOOST_HANA_STRING(R"(
 
 # Which audio input device to use.

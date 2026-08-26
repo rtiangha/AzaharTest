@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <SDL.h>
@@ -16,7 +17,9 @@ struct SDL2Sink::Impl {
     unsigned int sample_rate = 0;
 
     SDL_AudioDeviceID audio_device_id = 0;
+    bool audio_subsystem_initialized = false;
 
+    std::mutex mutex;
     std::function<void(s16*, std::size_t)> cb;
 
     static void Callback(void* impl_, u8* buffer, int buffer_size_in_bytes);
@@ -28,6 +31,7 @@ SDL2Sink::SDL2Sink(std::string device_name) : impl(std::make_unique<Impl>()) {
         impl->audio_device_id = 0;
         return;
     }
+    impl->audio_subsystem_initialized = true;
 
     SDL_AudioSpec desired_audiospec;
     SDL_zero(desired_audiospec);
@@ -48,7 +52,7 @@ SDL2Sink::SDL2Sink(std::string device_name) : impl(std::make_unique<Impl>()) {
 
     impl->audio_device_id =
         SDL_OpenAudioDevice(device, false, &desired_audiospec, &obtained_audiospec, 0);
-    if (impl->audio_device_id <= 0) {
+    if (impl->audio_device_id == 0) {
         LOG_CRITICAL(Audio_Sink, "SDL_OpenAudioDevice failed with code {} for device \"{}\"",
                      impl->audio_device_id, device_name);
         return;
@@ -61,31 +65,49 @@ SDL2Sink::SDL2Sink(std::string device_name) : impl(std::make_unique<Impl>()) {
 }
 
 SDL2Sink::~SDL2Sink() {
-    if (impl->audio_device_id <= 0)
-        return;
-
-    SDL_CloseAudioDevice(impl->audio_device_id);
+    if (impl->audio_device_id != 0) {
+        SDL_CloseAudioDevice(impl->audio_device_id);
+    }
+    if (impl->audio_subsystem_initialized) {
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
 }
 
 unsigned int SDL2Sink::GetNativeSampleRate() const {
-    if (impl->audio_device_id <= 0)
+    if (impl->audio_device_id == 0)
         return native_sample_rate;
 
     return impl->sample_rate;
 }
 
 void SDL2Sink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
-    impl->cb = cb;
+    std::lock_guard<std::mutex> lock(impl->mutex);
+    impl->cb = std::move(cb);
+}
+
+bool SDL2Sink::IsInitialized() const {
+    return impl->audio_device_id != 0;
 }
 
 void SDL2Sink::Impl::Callback(void* impl_, u8* buffer, int buffer_size_in_bytes) {
-    Impl* impl = reinterpret_cast<Impl*>(impl_);
-    if (!impl || !impl->cb)
+    auto* impl = static_cast<Impl*>(impl_);
+    if (!impl) {
         return;
+    }
 
+    std::function<void(s16*, std::size_t)> callback;
+    {
+        std::lock_guard<std::mutex> lock(impl->mutex);
+        callback = impl->cb;
+    }
+    if (!callback) {
+        return;
+    }
+
+    // desired_audiospec.channels == 2, AUDIO_S16 == 16-bit samples per channel.
     const std::size_t num_frames = buffer_size_in_bytes / (2 * sizeof(s16));
 
-    impl->cb(reinterpret_cast<s16*>(buffer), num_frames);
+    callback(reinterpret_cast<s16*>(buffer), num_frames);
 }
 
 std::vector<std::string> ListSDL2SinkDevices() {
@@ -97,7 +119,10 @@ std::vector<std::string> ListSDL2SinkDevices() {
     std::vector<std::string> device_list;
     const int device_count = SDL_GetNumAudioDevices(0);
     for (int i = 0; i < device_count; ++i) {
-        device_list.push_back(SDL_GetAudioDeviceName(i, 0));
+        const char* name = SDL_GetAudioDeviceName(i, 0);
+        if (name) {
+            device_list.emplace_back(name);
+        }
     }
 
     SDL_QuitSubSystem(SDL_INIT_AUDIO);

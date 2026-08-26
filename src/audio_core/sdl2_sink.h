@@ -19,6 +19,10 @@ public:
 
     void SetCallback(std::function<void(s16*, std::size_t)> cb) override;
 
+    /// Returns true if the underlying SDL audio subsystem and device were
+    /// successfully initialized and opened.
+    bool IsInitialized() const;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

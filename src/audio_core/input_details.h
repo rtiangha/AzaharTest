@@ -26,6 +26,8 @@ enum class InputType : u32 {
     OpenAL = 4,
 #ifdef HAVE_LIBRETRO
     LibRetro = 5,
+#elif ANDROID
+    Oboe = 5,
 #endif
 };
 

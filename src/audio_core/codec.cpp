@@ -44,18 +44,22 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const std::size_t sample_count,
 
         // Decodes an audio sample. One nibble produces one sample.
         const auto decode_sample = [&](const int nibble) -> s16 {
-            const int xn = nibble * scale;
+            const s64 xn = static_cast<s64>(nibble) * scale;
             // We first transform everything into 11 bit fixed point, perform the second order
             // digital filter, then transform back.
             // 0x400 == 0.5 in 11 bit fixed point.
             // Filter: y[n] = x[n] + 0.5 + c1 * y[n-1] + c2 * y[n-2]
-            int val = ((xn << 11) + 0x400 + coef1 * yn1 + coef2 * yn2) >> 11;
+            // Computed in 64-bit to avoid signed overflow: coef1/coef2 can be up to
+            // +/-32768 and yn1/yn2 up to +/-32768, so coef*y alone can approach 2^30,
+            // and the summed terms can exceed the range of a 32-bit int before clamping.
+            const s64 val64 = ((xn << 11) + 0x400 + static_cast<s64>(coef1) * yn1 +
+                               static_cast<s64>(coef2) * yn2) >> 11;
             // Clamp to output range.
-            val = std::clamp(val, -32768, 32767);
+            const int val = static_cast<int>(std::clamp<s64>(val64, -32768, 32767));
             // Advance output feedback.
             yn2 = yn1;
             yn1 = val;
-            return (s16)val;
+            return static_cast<s16>(val);
         };
 
         std::size_t outputi = framei * SAMPLES_PER_FRAME;

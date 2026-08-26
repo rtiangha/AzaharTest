@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cstring>
 #include <utility>
 #include <vector>
 #include <AL/al.h>
@@ -30,12 +32,25 @@ void OpenALInput::StartSampling(const InputParameters& params) {
         return;
     }
 
-    // OpenAL supports unsigned 8-bit and signed 16-bit PCM.
-    // TODO: Re-sample the stream.
+    if (params.sample_size != 8 && params.sample_size != 16) {
+        LOG_CRITICAL(Audio,
+                     "Unsupported input sample size: {} bits. Only 8-bit and 16-bit are "
+                     "supported by the OpenAL input backend.",
+                     params.sample_size);
+        return;
+    }
+
+    // OpenAL only supports unsigned 8-bit and signed 16-bit PCM. When the requested
+    // signedness doesn't match what OpenAL provides for this sample size, we still
+    // open the device at the requested sample_size, but the returned samples' sign
+    // is NOT converted to match what was requested.
+    // TODO: Convert signedness (and/or resample) to match the requested format.
     if ((params.sample_size == 8 && params.sign == Signedness::Signed) ||
         (params.sample_size == 16 && params.sign == Signedness::Unsigned)) {
-        LOG_WARNING(Audio, "Application requested unsupported unsigned PCM format. Falling back to "
-                           "supported format.");
+        LOG_WARNING(Audio,
+                    "Application requested unsupported signedness for {}-bit PCM; returned "
+                    "samples will not match the requested signedness.",
+                    params.sample_size);
     }
 
     parameters = params;
@@ -45,8 +60,14 @@ void OpenALInput::StartSampling(const InputParameters& params) {
     impl->device = alcCaptureOpenDevice(
         device_id != auto_device_name && !device_id.empty() ? device_id.c_str() : nullptr,
         params.sample_rate, format, static_cast<ALsizei>(params.buffer_size));
+    if (impl->device == nullptr) {
+        LOG_CRITICAL(Audio, "alcCaptureOpenDevice failed.");
+        StopSampling();
+        return;
+    }
+
     auto open_error = alcGetError(impl->device);
-    if (impl->device == nullptr || open_error != ALC_NO_ERROR) {
+    if (open_error != ALC_NO_ERROR) {
         LOG_CRITICAL(Audio, "alcCaptureOpenDevice failed: {}", open_error);
         StopSampling();
         return;
@@ -64,7 +85,9 @@ void OpenALInput::StartSampling(const InputParameters& params) {
 void OpenALInput::StopSampling() {
     if (impl->device) {
         alcCaptureStop(impl->device);
-        alcCaptureCloseDevice(impl->device);
+        if (alcCaptureCloseDevice(impl->device) == ALC_FALSE) {
+            LOG_ERROR(Audio, "alcCaptureCloseDevice failed.");
+        }
         impl->device = nullptr;
     }
 }

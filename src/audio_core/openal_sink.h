@@ -20,6 +20,10 @@ public:
 
     void SetCallback(std::function<void(s16*, std::size_t)> cb) override;
 
+    /// Returns true if the underlying OpenAL device, context, and source were
+    /// successfully created and started.
+    bool IsInitialized() const;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

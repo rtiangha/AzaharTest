@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <mutex>
+
 #include "audio_core/oboe_input.h"
 #include "audio_core/sink.h" // For auto_device_name
 #include "common/logging/log.h"
@@ -17,32 +19,42 @@ struct OboeInput::Impl : public oboe::AudioStreamDataCallback,
     SampleQueue sample_queue{};
     u8 sample_size_in_bytes = 0;
     InputParameters current_params{};
+    std::mutex mutex;
 
-    oboe::DataCallbackResult onAudioReady(oboe::AudioStream* stream, void* audioData,
+    // Reused across callbacks to avoid allocating on the audio thread.
+    std::vector<u8> scratch_buffer;
+
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream* oboeStream, void* audioData,
                                           int32_t numFrames) override {
         if (!audioData || numFrames <= 0) {
             return oboe::DataCallbackResult::Continue;
         }
 
+        // The stream is always opened as I16, so each frame is 2 bytes
+        // regardless of the requested output sample_size_in_bytes.
         const auto* inputBuffer = static_cast<const int16_t*>(audioData);
-        std::vector<u8> samples;
+        const std::size_t frameCount = static_cast<std::size_t>(numFrames);
+
+        scratch_buffer.clear();
 
         if (sample_size_in_bytes == 1) {
-            samples.reserve(numFrames);
-            for (int i = 0; i < numFrames; ++i) {
-                samples.push_back(
+            scratch_buffer.reserve(frameCount);
+            for (std::size_t i = 0; i < frameCount; ++i) {
+                scratch_buffer.push_back(
                     static_cast<u8>((static_cast<uint16_t>(inputBuffer[i]) >> 8) & 0xFF));
             }
         } else {
+            // sample_size_in_bytes is validated to be 1 or 2 in StartSampling,
+            // so this is always a safe, in-bounds copy of the I16 source data.
             const auto* data = reinterpret_cast<const u8*>(inputBuffer);
-            samples.insert(samples.end(), data, data + numFrames * sample_size_in_bytes);
+            scratch_buffer.assign(data, data + frameCount * sizeof(int16_t));
         }
 
-        sample_queue.Push(samples);
+        sample_queue.Push(scratch_buffer);
         return oboe::DataCallbackResult::Continue;
     }
 
-    void onErrorAfterClose(oboe::AudioStream* stream, oboe::Result error) override {
+    void onErrorAfterClose(oboe::AudioStream* /* oboeStream */, oboe::Result error) override {
         if (error == oboe::Result::ErrorDisconnected) {
             LOG_WARNING(Audio, "Oboe input stream disconnected.");
         }
@@ -67,8 +79,18 @@ void OboeInput::StartSampling(const InputParameters& params) {
             "Application requested unsupported unsigned PCM format. Falling back to signed.");
     }
 
+    const u8 requested_sample_size_in_bytes = static_cast<u8>(params.sample_size / 8);
+    if (requested_sample_size_in_bytes != 1 && requested_sample_size_in_bytes != 2) {
+        LOG_CRITICAL(Audio,
+                     "Unsupported input sample size: {} bits. Only 8-bit and 16-bit are "
+                     "supported by the Oboe input backend.",
+                     params.sample_size);
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(impl->mutex);
     impl->current_params = params;
-    impl->sample_size_in_bytes = params.sample_size / 8;
+    impl->sample_size_in_bytes = requested_sample_size_in_bytes;
 
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input)
@@ -89,27 +111,40 @@ void OboeInput::StartSampling(const InputParameters& params) {
     oboe::Result result = builder.openStream(&impl->stream);
     if (result != oboe::Result::OK || !impl->stream) {
         LOG_CRITICAL(Audio, "Failed to open Oboe input stream: {}", static_cast<int>(result));
-        StopSampling();
+        StopSamplingLocked();
         return;
     }
 
     result = impl->stream->requestStart();
     if (result != oboe::Result::OK) {
         LOG_CRITICAL(Audio, "Failed to start Oboe input stream: {}", static_cast<int>(result));
-        StopSampling();
+        StopSamplingLocked();
         return;
     }
 }
 
 void OboeInput::StopSampling() {
+    std::lock_guard<std::mutex> lock(impl->mutex);
+    StopSamplingLocked();
+}
+
+// Caller must hold impl->mutex.
+void OboeInput::StopSamplingLocked() {
     if (impl->stream) {
-        impl->stream->stop();
-        impl->stream->close();
+        auto stopResult = impl->stream->stop();
+        auto closeResult = impl->stream->close();
+        if (stopResult != oboe::Result::OK) {
+            LOG_CRITICAL(Audio, "Error stopping input stream: {}", static_cast<int>(stopResult));
+        }
+        if (closeResult != oboe::Result::OK) {
+            LOG_CRITICAL(Audio, "Error closing input stream: {}", static_cast<int>(closeResult));
+        }
         impl->stream = nullptr;
     }
 }
 
 bool OboeInput::IsSampling() {
+    std::lock_guard<std::mutex> lock(impl->mutex);
     return impl->stream && impl->stream->getState() == oboe::StreamState::Started;
 }
 
@@ -118,7 +153,11 @@ void OboeInput::AdjustSampleRate(u32 sample_rate) {
         return;
     }
 
-    auto new_params = impl->current_params;
+    InputParameters new_params;
+    {
+        std::lock_guard<std::mutex> lock(impl->mutex);
+        new_params = impl->current_params;
+    }
     new_params.sample_rate = sample_rate;
     StopSampling();
     StartSampling(new_params);

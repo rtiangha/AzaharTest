@@ -24,6 +24,8 @@ public:
     Samples Read() override;
 
 private:
+    void StopSamplingLocked();
+
     struct Impl;
     std::unique_ptr<Impl> impl;
     std::string device_id;

@@ -54,7 +54,9 @@ void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output
           std::size_t& outputi) {
     StepOverSamples(
         state, input, rate, output, outputi,
-        [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) { return x0; });
+        [](u64 /* fraction */, const auto& x0, const auto& /* x1 */, const auto& /* x2 */) {
+            return x0;
+        });
 }
 
 void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
@@ -66,9 +68,14 @@ void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& outp
                         s64 delta0 = std::clamp<s64>(x1[0] - x0[0], -32768, 32767);
                         s64 delta1 = std::clamp<s64>(x1[1] - x0[1], -32768, 32767);
 
+                        // Signed throughout: fraction and scale_factor cast to s64 so the
+                        // multiply/divide don't get silently promoted to unsigned arithmetic.
+                        const s64 signed_fraction = static_cast<s64>(fraction);
+                        const s64 signed_scale_factor = static_cast<s64>(scale_factor);
+
                         return std::array<s16, 2>{
-                            static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),
-                            static_cast<s16>(x0[1] + fraction * delta1 / scale_factor),
+                            static_cast<s16>(x0[0] + signed_fraction * delta0 / signed_scale_factor),
+                            static_cast<s16>(x0[1] + signed_fraction * delta1 / signed_scale_factor),
                         };
                     });
 }

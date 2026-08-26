@@ -23,6 +23,10 @@ public:
     Samples Read() override;
 
 private:
+    // Stops and destroys the stream only; leaves the cubeb context alive
+    // for reuse (e.g. by AdjustSampleRate). Caller must hold impl->mutex.
+    void StopStreamLocked();
+
     struct Impl;
     std::unique_ptr<Impl> impl;
     std::string device_id;

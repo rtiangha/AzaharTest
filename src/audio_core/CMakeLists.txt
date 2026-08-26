@@ -40,6 +40,7 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h cubeb_input.cpp cubeb_input.h>
     $<$<BOOL:${ENABLE_LIBRETRO}>:libretro_sink.cpp libretro_sink.h libretro_input.cpp libretro_input.h>
     $<$<BOOL:${ENABLE_OPENAL}>:openal_input.cpp openal_input.h openal_sink.cpp openal_sink.h>
+    $<$<BOOL:${ANDROID}>:oboe_input.cpp oboe_input.h oboe_sink.cpp oboe_sink.h>
 )
 
 create_target_directory_groups(audio_core)
@@ -64,11 +65,8 @@ if(ENABLE_OPENAL)
 endif()
 
 if(ANDROID)
-    target_sources(audio_core PRIVATE
-        oboe_sink.cpp
-        oboe_sink.h
-    )
     target_link_libraries(audio_core PRIVATE oboe)
+    target_compile_definitions(audio_core PUBLIC HAVE_OBOE)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

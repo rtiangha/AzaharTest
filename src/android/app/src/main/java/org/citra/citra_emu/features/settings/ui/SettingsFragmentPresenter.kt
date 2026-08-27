@@ -2042,7 +2042,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.log_regex_filter_name,
                     R.string.log_regex_filter_description,
                     StringSetting.LOG_REGEX_FILTER.defaultValue,
-                    255
+                    ""
                 )
             )
         }

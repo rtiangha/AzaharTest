@@ -541,6 +541,10 @@ output_type =
 # Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
 )") DECLARE_KEY(log_filter) BOOST_HANA_STRING(R"(
 
+# log_regex_filter is a filter that only displays logs based on the regex
+# expression in POSIX format supplied. Default is empty.
+)") DECLARE_KEY(log_regex_filter) BOOST_HANA_STRING(R"(
+
 # Whether or not Azahar-related images should be hidden from the Android gallery
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(android_hide_images) BOOST_HANA_STRING(R"(

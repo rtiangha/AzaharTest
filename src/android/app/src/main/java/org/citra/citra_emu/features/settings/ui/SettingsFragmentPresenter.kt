@@ -2014,6 +2014,37 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
                 )
             )
+
+            add(HeaderSetting(R.string.logging))
+
+            val logFilterModes = 
+	        settingsActivity.resources.getStringArray(R.array.logFilterNameModes)
+            val logFilterValues =
+                settingsActivity.resources.getStringArray(R.array.logFilterNameValues)
+            add(
+                StringSingleChoiceSetting(
+                    StringSetting.LOG_FILTER,
+                    R.string.log_filter_name,
+                    R.string.log_filter_description,
+                    logFilterModes,
+                    logFilterValues,
+                    StringSetting.LOG_FILTER.key,
+                    StringSetting.LOG_FILTER.defaultValue
+                )
+            )
+            val logRegexFilterModes =
+                settingsActivity.resources.getStringArray(R.array.logRegexFilterNameModes)
+            val logRegexFilterValues =
+                settingsActivity.resources.getStringArray(R.array.logRegexFilterNameValues)
+            add(
+                StringInputSetting(
+                    StringSetting.LOG_REGEX_FILTER,
+                    R.string.log_regex_filter_name,
+                    R.string.log_regex_filter_description,
+                    StringSetting.LOG_REGEX_FILTER.defaultValue,
+                    255
+                )
+            )
         }
     }
 

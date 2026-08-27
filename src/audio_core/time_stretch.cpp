@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
 #include <SoundTouch.h>
 
@@ -33,6 +34,13 @@ void TimeStretcher::SetOutputSampleRate(unsigned int sample_rate) {
 
 std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
                                    std::size_t num_out) {
+    if (num_out == 0) {
+        // Avoid a 0/0 (or x/0) division below, which would propagate NaN into
+        // stretch_ratio -- a persistent member that is never otherwise reset,
+        // permanently corrupting every future call's tempo calculation.
+        return 0;
+    }
+
     const double time_delta = static_cast<double>(num_out) / native_sample_rate; // seconds
     double current_ratio = static_cast<double>(num_in) / static_cast<double>(num_out);
 
@@ -84,9 +92,16 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
         const std::size_t samples_received =
             sound_touch->receiveSamples(float_out.data(), static_cast<u32>(num_out));
 
-        // Converting output samples back to shorts so we can use them
+        // Converting output samples back to shorts so we can use them.
+        // SoundTouch's stretched output is not guaranteed to stay within [-1, 1]
+        // (transient overshoot on peaks is possible), so the scaled value must be
+        // clamped before the narrowing cast -- converting an out-of-range float to
+        // an integer type is undefined behavior, not just a wraparound.
+        constexpr float s16_max = static_cast<float>(std::numeric_limits<s16>::max());
+        constexpr float s16_min = static_cast<float>(std::numeric_limits<s16>::min());
         for (std::size_t i = 0; i < (2 * num_out); i++) {
-            const s16 temp = static_cast<s16>(float_out[i] * std::numeric_limits<s16>::max());
+            const float scaled = float_out[i] * s16_max;
+            const s16 temp = static_cast<s16>(std::clamp(scaled, s16_min, s16_max));
             out[i] = temp;
         }
 

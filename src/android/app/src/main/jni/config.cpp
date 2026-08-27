@@ -310,7 +310,7 @@ void Config::ReadValues() {
     Common::Log::SetGlobalFilter(filter);
     Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
 
-    // Debugging
+    // Logging
     Settings::values.record_frame_times =
         android_config->GetBoolean("Debugging", Settings::HKeys::record_frame_times.c_str(), false);
     ReadSetting("Debugging", Settings::values.renderer_debug);

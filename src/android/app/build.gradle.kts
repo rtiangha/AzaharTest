@@ -84,6 +84,7 @@ android {
                     "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page
                     // sizes
+                    "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
                     "-DENABLE_GDBSTUB=OFF" // Disable GDB stub
                 )
             }

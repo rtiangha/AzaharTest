@@ -433,7 +433,7 @@ string>
     <string name="log_filter_debug">*:Debug</string>
     <string name="log_filter_trace">*:Trace</string>
     <string name="log_regex_filter_name">Regex Log Filter</string>
-    <string name="log_regex_filter_description">Use POSIX-format regular expressions to display only log entries that match the regex. For example, to only display <i>&lt;Info&gt;</i> level messages, enter <font face="monospace">\\&lt;Info\\&gt;</font>.</string>
+    <string name="log_regex_filter_description">Use POSIX-format regular expressions to display only log entries that match the regex. For example, to only display <i>&lt;Info&gt;</i> level messages, enter <font face="monospace">&lt;Info&gt;</font>.</string>
     <string name="log_regex_none">None</string>
     <string name="log_regex_critical">Critical</string>
     <string name="log_regex_error">Error</string>

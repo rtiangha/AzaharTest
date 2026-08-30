@@ -1962,24 +1962,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    BooleanSetting.DEBUG_RENDERER,
-                    R.string.renderer_debug,
-                    R.string.renderer_debug_description,
-                    BooleanSetting.DEBUG_RENDERER.key,
-                    BooleanSetting.DEBUG_RENDERER.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    BooleanSetting.INSTANT_DEBUG_LOG,
-                    R.string.instant_debug_log,
-                    R.string.instant_debug_log_description,
-                    BooleanSetting.INSTANT_DEBUG_LOG.key,
-                    BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
                     BooleanSetting.ENABLE_RPC_SERVER,
                     R.string.enable_rpc_server,
                     R.string.enable_rpc_server_desc,
@@ -2032,17 +2014,32 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     StringSetting.LOG_FILTER.defaultValue
                 )
             )
-            val logRegexFilterModes =
-                settingsActivity.resources.getStringArray(R.array.logRegexFilterNameModes)
-            val logRegexFilterValues =
-                settingsActivity.resources.getStringArray(R.array.logRegexFilterNameValues)
             add(
                 StringInputSetting(
                     StringSetting.LOG_REGEX_FILTER,
                     R.string.log_regex_filter_name,
                     R.string.log_regex_filter_description,
+                    StringSetting.LOG_REGEX_FILTER.key,
                     StringSetting.LOG_REGEX_FILTER.defaultValue,
-                    ""
+                    255
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DEBUG_RENDERER,
+                    R.string.renderer_debug,
+                    R.string.renderer_debug_description,
+                    BooleanSetting.DEBUG_RENDERER.key,
+                    BooleanSetting.DEBUG_RENDERER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.INSTANT_DEBUG_LOG,
+                    R.string.instant_debug_log,
+                    R.string.instant_debug_log_description,
+                    BooleanSetting.INSTANT_DEBUG_LOG.key,
+                    BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
             )
         }

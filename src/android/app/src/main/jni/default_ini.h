@@ -26,7 +26,6 @@ constexpr std::array android_config_omitted_keys = {
     Settings::Keys::screen_bottom_leftright_padding,
     Settings::Keys::screen_bottom_topbottom_padding,
     Settings::Keys::mono_render_option,
-    Settings::Keys::log_regex_filter, // Niche
     Settings::Keys::video_encoder,
     Settings::Keys::video_encoder_options,
     Settings::Keys::video_bitrate,
@@ -542,7 +541,7 @@ output_type =
 )") DECLARE_KEY(log_filter) BOOST_HANA_STRING(R"(
 
 # log_regex_filter is a filter that only displays logs based on the regex
-# expression in POSIX format supplied. Default is empty.
+# expression in POSIX format supplied. Default is an empty string.
 )") DECLARE_KEY(log_regex_filter) BOOST_HANA_STRING(R"(
 
 # Whether or not Azahar-related images should be hidden from the Android gallery

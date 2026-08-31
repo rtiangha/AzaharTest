@@ -19,6 +19,7 @@ enum class Level : u8 {
     ///< completed.
     Critical, ///< Major problems during execution that threaten the stability of the entire
     ///< application.
+    None, ///< Don't log anything
 
     Count, ///< Total number of logging levels
 };

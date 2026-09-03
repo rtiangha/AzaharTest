@@ -43,6 +43,10 @@ jobs:
       - name: Update Android SDK CMake version
         run: |
           echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
+      - name: Accept Android licenses
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: true
       - name: Build
         run: JAVA_HOME=$JAVA_HOME_21_X64 ./.ci/android.sh
         env:

@@ -47,6 +47,11 @@ jobs:
         uses: android-actions/setup-android@v4
         with:
           log-accepted-android-sdk-licenses: true
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.4.357.0
+          cache: true
       - name: Build
         run: JAVA_HOME=$JAVA_HOME_21_X64 ./.ci/android.sh
         env:

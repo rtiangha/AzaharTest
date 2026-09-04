@@ -43,10 +43,9 @@ jobs:
       - name: Accept Android licenses
         uses: android-actions/setup-android@v4
         with:
+          cmdline-tools-version: 15859902
+          packages: "cmake;4.1.2"
           log-accepted-android-sdk-licenses: true
-      - name: Update Android SDK CMake version
-        run: |
-          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "cmake;4.1.2"
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.2
         with:

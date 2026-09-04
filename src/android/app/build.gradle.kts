@@ -2,13 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-import android.databinding.tool.ext.capitalizeUS
+import com.android.build.api.artifact.SingleArtifact
 import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    // Kotlin is compiled by AGP's built-in Kotlin support (AGP 9+), so
+    // org.jetbrains.kotlin.android is no longer applied here.
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("de.undercouch.download") version "5.7.0"
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "2.4.10"
@@ -28,7 +29,7 @@ val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/download
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-36"
+    compileSdk = 36
     ndkVersion = "29.0.14206865"
 
     compileOptions {
@@ -117,7 +118,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -134,7 +135,7 @@ android {
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             isDefault = true
@@ -194,7 +195,7 @@ android {
     sourceSets {
         named("main") {
             // Set up path for downloaded native libraries
-            jniLibs.srcDir(downloadedJniLibsPath)
+            jniLibs.directories.add(downloadedJniLibsPath)
         }
     }
 }
@@ -305,18 +306,22 @@ fun runGitCommand(command: ProcessBuilder): String? {
     }
 }
 
-android.applicationVariants.configureEach {
-    val variant = this
-    val capitalizedName = variant.name.capitalizeUS()
+// android.applicationVariants was removed by AGP's new DSL (AGP 9+), so this now
+// uses the androidComponents Variant API instead.
+// See https://developer.android.com/build/extend-agp#variant-api-artifacts-tasks
+androidComponents {
+    onVariants { variant ->
+        val capitalizedName = variant.name.replaceFirstChar { it.uppercaseChar() }
+        val apkOutputDir = variant.artifacts.get(SingleArtifact.APK)
 
-    val copyTask = tasks.register("copyBundle$capitalizedName") {
-        doLast {
-            project.copy {
-                from(variant.outputs.first().outputFile.parentFile)
-                include("*.apk")
-                into(layout.buildDirectory.dir("bundle"))
-            }
+        val copyTask = tasks.register<Copy>("copyBundle$capitalizedName") {
+            from(apkOutputDir)
+            include("*.apk")
+            into(layout.buildDirectory.dir("bundle"))
+        }
+
+        afterEvaluate {
+            tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
         }
     }
-    tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
 }

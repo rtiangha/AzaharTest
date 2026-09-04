@@ -37,12 +37,9 @@ jobs:
           fi
           echo $GIT_TAG_NAME
       - name: Deps
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install ninja-build ccache apksigner -y
-      - name: Update Android SDK CMake version
-        run: |
-          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ninja-build ccache apksigner
       - name: Accept Android licenses
         uses: android-actions/setup-android@v4
         with:
@@ -52,6 +49,13 @@ jobs:
         with:
           version: 1.4.357.0
           cache: true
+      - name: Install JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+          check-latest: true
       - name: Build
         run: JAVA_HOME=$JAVA_HOME_21_X64 ./.ci/android.sh
         env:

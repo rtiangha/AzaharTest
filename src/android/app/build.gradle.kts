@@ -4,13 +4,14 @@
 
 import android.databinding.tool.ext.capitalizeUS
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("de.undercouch.download") version "5.7.0"
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("plugin.serialization") version "2.4.10"
     id("androidx.navigation.safeargs.kotlin")
 }
 
@@ -33,10 +34,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    kotlinOptions {
-        jvmTarget = "21"
     }
 
     androidResources {
@@ -199,6 +196,14 @@ android {
             // Set up path for downloaded native libraries
             jniLibs.srcDir(downloadedJniLibsPath)
         }
+    }
+}
+
+kotlin {
+    // The kotlinOptions {} DSL was deprecated in Kotlin 2.0 and removed in Kotlin 2.2,
+    // so JVM target configuration now lives here instead of android.kotlinOptions.
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 

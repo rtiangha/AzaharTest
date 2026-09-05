@@ -2,13 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-import android.databinding.tool.ext.capitalizeUS
 import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Locale
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("de.undercouch.download") version "5.7.0"
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "2.4.10"
@@ -23,12 +22,12 @@ plugins {
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
 val abiFilter = listOf("arm64-v8a")
 
-val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/downloadedJniLibs"
+val downloadedJniLibsDir = layout.buildDirectory.dir("downloadedJniLibs")
 
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-36"
+    compileSdk = 36
     ndkVersion = "29.0.14206865"
 
     compileOptions {
@@ -41,8 +40,10 @@ android {
     }
 
     packaging {
-        // This is necessary for libadrenotools custom driver loading
-        jniLibs.useLegacyPackaging = true
+        // Modern packaging options for native libraries
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     buildFeatures {
@@ -51,8 +52,7 @@ android {
     }
 
     lint {
-        // This is important as it will run lint but not abort on error
-        // Lint has some overly obnoxious "errors" that should really be warnings
+        // Run lint but do not abort on error
         abortOnError = false
     }
 
@@ -117,7 +117,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -130,21 +130,16 @@ android {
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
             isShrinkResources = true
-            // TODO: ^- Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             isDefault = true
         }
 
         // Same as above, but with isDebuggable disabled.
-        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS)
-        // without constantly tripping over years-old and seemingly harmless memory bugs.
-        // We should fix those bugs eventually, but for now this exists as a workaround to
-        // allow other work to be done on these devices.
         register("relWithDebInfoLite") {
             initWith(getByName("relWithDebInfo"))
             signingConfig = signingConfigs.getByName("debug")
@@ -153,15 +148,12 @@ android {
                 enableBaselineProfile = false // Disabled by default when isDebuggable is true
             }
             lint {
-                checkReleaseBuilds = false // Ditto
-                // ^- The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+                checkReleaseBuilds = false
             }
         }
 
         // Signed by debug key disallowing distribution on Play Store.
-        // Attaches 'debug' suffix to version and package name, allowing installation alongside the release build.
         debug {
-            // TODO If this is ever modified, change application_id in debug/strings.xml
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             isDebuggable = true
@@ -180,7 +172,6 @@ android {
         register("googlePlay") {
             dimension = "version"
             versionNameSuffix = "-googleplay"
-            // applicationId = "io.github.lime3ds.android"
         }
     }
 
@@ -194,14 +185,12 @@ android {
     sourceSets {
         named("main") {
             // Set up path for downloaded native libraries
-            jniLibs.srcDir(downloadedJniLibsPath)
+            jniLibs.srcDir(downloadedJniLibsDir)
         }
     }
 }
 
 kotlin {
-    // The kotlinOptions {} DSL was deprecated in Kotlin 2.0 and removed in Kotlin 2.2,
-    // so JVM target configuration now lives here instead of android.kotlinOptions.
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
     }
@@ -233,7 +222,7 @@ val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanVal
     src(
         "https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.357.0/android-binaries-1.4.357.0.zip"
     )
-    dest(file("${layout.buildDirectory.get().asFile.path}/tmp/Vulkan-ValidationLayers.zip"))
+    dest(layout.buildDirectory.file("tmp/Vulkan-ValidationLayers.zip"))
     onlyIfModified(true)
 }
 
@@ -241,13 +230,12 @@ val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanVal
 val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLayers") {
     dependsOn(downloadVulkanValidationLayers)
     from(zipTree(downloadVulkanValidationLayers.get().dest)) {
-        // Exclude the top level directory in the zip as it violates the expected jniLibs directory structure.
         eachFile {
             relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
         }
         includeEmptyDirs = false
     }
-    into(downloadedJniLibsPath)
+    into(downloadedJniLibsDir)
 }
 
 tasks.named("preBuild") {
@@ -293,7 +281,7 @@ fun runGitCommand(command: ProcessBuilder): String? {
 
         return if (process.exitValue() == 0) {
             inputStream.bufferedReader()
-                .use { it.readText().trim() } // return the value of gitHash
+                .use { it.readText().trim() }
         } else {
             val errorMessage = errorStream.bufferedReader().use { it.readText().trim() }
             logger.error("Error running git command: $errorMessage")
@@ -305,18 +293,23 @@ fun runGitCommand(command: ProcessBuilder): String? {
     }
 }
 
-android.applicationVariants.configureEach {
-    val variant = this
-    val capitalizedName = variant.name.capitalizeUS()
+// Rewritten using modern AndroidComponents API compatible with AGP 9.0+
+androidComponents.onVariants { variant ->
+    val capitalizedName = variant.name.replaceFirstChar { 
+        if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() 
+    }
 
     val copyTask = tasks.register("copyBundle$capitalizedName") {
         doLast {
             project.copy {
-                from(variant.outputs.first().outputFile.parentFile)
-                include("*.apk")
+                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
+                include("*.apk", "*.aab")
                 into(layout.buildDirectory.dir("bundle"))
             }
         }
     }
-    tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
+    tasks.matching { it.name == "bundle$capitalizedName" }.configureEach {
+        finalizedBy(copyTask)
+    }
 }
+

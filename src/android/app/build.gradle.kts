@@ -312,7 +312,16 @@ androidComponents.onVariants { variant ->
         finalizedBy(copyApkTask)
     }
 
-    val copyApkTask = tasks.register("copyApk$capitalizedName") {                                                 doLast {                                                    project.copy {
-                from(layout.buildDirectory.dir("outputs/apk/${variant.name}"))                                               include("*.apk")                                        into(layout.buildDirectory.dir("bundle"))                                                                   }                                                   }                                                   }                                                       tasks.matching { it.name == "assemble$capitalizedName" }.configureEach {                                              finalizedBy(copyApkTask)                         }
+    val copyApkTask = tasks.register("copyApk$capitalizedName") {                                                       doLast {
+	    project.copy {
+                from(layout.buildDirectory.dir("outputs/apk/${variant.name}"))
+		include("*.apk")
+		into(layout.buildDirectory.dir("bundle"))
+	    }
+        }
+    }
+    tasks.matching { it.name == "assemble$capitalizedName" }.configureEach {
+	finalizedBy(copyApkTask)
+    }
 }
 

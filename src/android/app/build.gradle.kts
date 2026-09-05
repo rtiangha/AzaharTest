@@ -309,7 +309,7 @@ androidComponents.onVariants { variant ->
         }
     }
     tasks.matching { it.name == "bundle$capitalizedName" }.configureEach {
-        finalizedBy(copyApkTask)
+        finalizedBy(copyBundleTask)
     }
 
     val copyApkTask = tasks.register("copyApk$capitalizedName") {                                                       doLast {

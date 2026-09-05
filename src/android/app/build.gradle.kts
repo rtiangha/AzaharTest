@@ -299,18 +299,18 @@ androidComponents.onVariants { variant ->
         if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() 
     }
 
-    val copyBundleTask = tasks.register("copyBundle$capitalizedName") {
-        doLast {
-            project.copy {
-                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
-                include("*.aab")
-                into(layout.buildDirectory.dir("bundle"))
-            }
-        }
-    }
-    tasks.matching { it.name == "bundle$capitalizedName" }.configureEach {
-        finalizedBy(copyBundleTask)
-    }
+//    val copyBundleTask = tasks.register("copyBundle$capitalizedName") {
+//        doLast {
+//            project.copy {
+//                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
+//                include("*.aab")
+//                into(layout.buildDirectory.dir("bundle"))
+//            }
+//        }
+//    }
+//    tasks.matching { it.name == "bundle$capitalizedName" }.configureEach {
+//        finalizedBy(copyBundleTask)
+//    }
 
     val copyApkTask = tasks.register("copyApk$capitalizedName") {
         doLast {

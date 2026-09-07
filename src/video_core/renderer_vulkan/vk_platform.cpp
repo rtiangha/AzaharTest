@@ -327,6 +327,25 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         layers.push_back("VK_LAYER_LUNARG_api_dump");
     }
 
+    // Sanitize layers list
+    const auto layer_properties = vk::enumerateInstanceLayerProperties();
+    if (layer_properties.empty()) {
+        LOG_ERROR(Render_Vulkan, "Failed to query layer properties");
+        return {};
+    }
+
+    boost::container::erase_if(layers, [&](const char* layer) -> bool {
+        const auto it = std::find_if(
+            layer_properties.begin(), layer_properties.end(),
+            [layer](const auto& prop) { return std::strcmp(layer, prop.layerName) == 0; });
+
+        if (it == layer_properties.end()) {
+            LOG_INFO(Render_Vulkan, "Candidate instance layer {} is not available", layer);
+            return true;
+        }
+        return false;
+    });
+
     vk::InstanceCreateInfo instance_ci = {
         .flags = GetInstanceFlags(),
         .pApplicationInfo = &application_info,

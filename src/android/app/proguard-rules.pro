@@ -5,6 +5,52 @@
 # To get usable stack traces
 -dontobfuscate
 
+# Keep the entire NativeLibrary class (and its companion/inner classes).
+# libcitra-android.so's JNI_OnLoad reads static fields on this class directly
+# via GetStaticObjectField - not just its declared `native` methods - so the
+# native-methods-only rule above doesn't cover it. Without this, R8 can shrink
+# away a field only native code ever touches, and JNI_OnLoad aborts with
+# "JNI DETECTED ERROR IN APPLICATION: fid == null" on app launch.
+#
+# NOTE: this rule alone was NOT sufficient - the same crash recurred against a
+# rebuilt libcitra-android.so, which means JNI_OnLoad is reaching into some
+# OTHER class we haven't identified (the Java stack trace can't reveal which -
+# the class name is a hardcoded string inside the native code). The broader
+# package-wide rule below is a stopgap until that class is found; see the
+# -printusage note underneath for how to narrow it back down.
+-keep class org.citra.citra_emu.NativeLibrary { *; }
+-keep class org.citra.citra_emu.NativeLibrary$* { *; }
+
+# STOPGAP: keep the whole app package from shrinking/optimization while we
+# track down exactly which class(es) JNI_OnLoad reaches into. Once identified,
+# replace this with a narrow -keep on just that class and remove this line.
+-keep class org.citra.citra_emu.** { *; }
+
+# Keep everything referenced by JNI (native <-> Java/Kotlin bridge).
+# R8 can't see into libcitra-android.so, so anything it calls back into
+# by name (FindClass/GetMethodID) needs to survive shrinking explicitly.
+# includedescriptorclasses also keeps the parameter/return types used in
+# native method signatures, since those get passed across the JNI boundary too.
+-keepclasseswithmembers,includedescriptorclasses class * {
+    native <methods>;
+}
+
+# Keep WorkManager and Room's internal classes. WorkManager builds its
+# WorkDatabase (a Room database) reflectively via androidx.startup at app
+# launch, before any app code runs - R8 can't see that path statically,
+# so without this it can strip/rename something Room's generated database
+# implementation needs, crashing on launch with
+# "Failed to create an instance of class androidx.work.impl.WorkDatabase".
+-keep class androidx.work.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.work.**
+
+# DIAGNOSTIC (temporary): logs everything R8 removes to
+# app/build/outputs/mapping/release/usage.txt. Useful for narrowing the
+# STOPGAP rule above back down once we know what to look for - safe to
+# remove once this is resolved, it doesn't affect the build output.
+-printusage build/outputs/mapping/release/usage.txt
+
 # Prevents crashing when using Wini
 -keep class org.ini4j.spi.IniParser
 -keep class org.ini4j.spi.IniBuilder

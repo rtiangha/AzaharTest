@@ -26,15 +26,6 @@
 # replace this with a narrow -keep on just that class and remove this line.
 -keep class org.citra.citra_emu.** { *; }
 
-# Keep everything referenced by JNI (native <-> Java/Kotlin bridge).
-# R8 can't see into libcitra-android.so, so anything it calls back into
-# by name (FindClass/GetMethodID) needs to survive shrinking explicitly.
-# includedescriptorclasses also keeps the parameter/return types used in
-# native method signatures, since those get passed across the JNI boundary too.
--keepclasseswithmembers,includedescriptorclasses class * {
-    native <methods>;
-}
-
 # Keep WorkManager and Room's internal classes. WorkManager builds its
 # WorkDatabase (a Room database) reflectively via androidx.startup at app
 # launch, before any app code runs - R8 can't see that path statically,

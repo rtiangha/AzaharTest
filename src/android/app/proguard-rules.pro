@@ -24,7 +24,7 @@
 # STOPGAP: keep the whole app package from shrinking/optimization while we
 # track down exactly which class(es) JNI_OnLoad reaches into. Once identified,
 # replace this with a narrow -keep on just that class and remove this line.
--keep class org.citra.citra_emu.** { *; }
+-keep class org.citra.citra_emu.utils.** { *; }
 
 # Keep WorkManager and Room's internal classes. WorkManager builds its
 # WorkDatabase (a Room database) reflectively via androidx.startup at app

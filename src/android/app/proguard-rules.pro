@@ -18,13 +18,11 @@
 # the class name is a hardcoded string inside the native code). The broader
 # package-wide rule below is a stopgap until that class is found; see the
 # -printusage note underneath for how to narrow it back down.
--keep class org.citra.citra_emu.NativeLibrary { *; }
--keep class org.citra.citra_emu.NativeLibrary$* { *; }
 
 # STOPGAP: keep the whole app package from shrinking/optimization while we
 # track down exactly which class(es) JNI_OnLoad reaches into. Once identified,
 # replace this with a narrow -keep on just that class and remove this line.
--keep class org.citra.citra_emu.utils.NetPlayManager** { *; }
+-keep class org.citra.citra_emu.utils** { *; }
 
 # Keep WorkManager and Room's internal classes. WorkManager builds its
 # WorkDatabase (a Room database) reflectively via androidx.startup at app

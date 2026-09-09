@@ -10,7 +10,7 @@ plugins {
     id("com.android.application")
     id("de.undercouch.download") version "5.7.0"
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("plugin.serialization") version "2.4.20"
     id("androidx.navigation.safeargs.kotlin")
 }
 

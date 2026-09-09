@@ -24,7 +24,7 @@
 # STOPGAP: keep the whole app package from shrinking/optimization while we
 # track down exactly which class(es) JNI_OnLoad reaches into. Once identified,
 # replace this with a narrow -keep on just that class and remove this line.
--keep class org.citra.citra_emu.utils.** { *; }
+-keep class org.citra.citra_emu.utils.NetPlayManager** { *; }
 
 # Keep WorkManager and Room's internal classes. WorkManager builds its
 # WorkDatabase (a Room database) reflectively via androidx.startup at app
@@ -35,12 +35,6 @@
 -keep class androidx.work.** { *; }
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.work.**
-
-# DIAGNOSTIC (temporary): logs everything R8 removes to
-# app/build/outputs/mapping/release/usage.txt. Useful for narrowing the
-# STOPGAP rule above back down once we know what to look for - safe to
-# remove once this is resolved, it doesn't affect the build output.
--printusage build/outputs/mapping/release/usage.txt
 
 # Prevents crashing when using Wini
 -keep class org.ini4j.spi.IniParser

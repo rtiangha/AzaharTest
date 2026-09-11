@@ -39,7 +39,7 @@ jobs:
       - name: Deps
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: ninja-build ccache apksigner
+          packages: ninja-build liblzma-dev libzstd-dev libbz2-dev ccache apksigner
       - name: Accept Android licenses
         uses: android-actions/setup-android@v4
         with:

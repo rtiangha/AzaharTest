@@ -14,6 +14,7 @@
 -keep class org.citra.citra_emu.NativeLibrary { *; }
 -keep class org.citra.citra_emu.NativeLibrary$* { *; }
 -keep class org.citra.citra_emu.utils.** { *; }
+-keep class org.citra.citra_emu.features.settings.** { *; }
 
 # Keep everything referenced by JNI (native <-> Java/Kotlin bridge).                                                    # R8 can't see into libcitra-android.so, so anything it calls back into
 # by name (FindClass/GetMethodID) needs to survive shrinking explicitly.

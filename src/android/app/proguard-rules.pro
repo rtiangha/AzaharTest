@@ -53,6 +53,10 @@
 -dontwarn java.beans.VetoableChangeListener
 -dontwarn java.beans.VetoableChangeSupport
 
+# Keep FindBugs annotations (handle missing class gracefully)
+-dontwarn edu.umd.cs.findbugs.annotations.**
+-keep class edu.umd.cs.findbugs.annotations.** { *; }
+
 # Don't include VERBOSE log calls in release builds
 -assumenosideeffects class android.util.Log {
     public static int v(...);

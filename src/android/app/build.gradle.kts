@@ -195,7 +195,6 @@ kotlin {
         jvmTarget.set(JvmTarget.JVM_21)
     }
 }
-
 dependencies {
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.appcompat:appcompat:1.8.0")
@@ -213,7 +212,8 @@ dependencies {
     implementation("com.google.android.material:material:1.14.0")
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("io.coil-kt:coil:2.7.0")
-    implementation("org.ini4j:ini4j:0.5.4")
+    implementation("com.github.rtiangha:ini4j:53419ca3cd")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 
@@ -325,4 +325,3 @@ androidComponents.onVariants { variant ->
         finalizedBy(copyApkTask)
     }
 }
-

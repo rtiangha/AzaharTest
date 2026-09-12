@@ -17,11 +17,21 @@ puts 'done'
 print 'Checking files...'
 issue_files = []
 branch_changed_files.each do |file_name|
-   if file_name.end_with?('.cpp', '.h', '.kt', '.kts', '.m', '.mm') and File.file?(file_name)
-      file_content = File.read(file_name, mode: 'r:bom|utf-8')
-      if not file_content.start_with?(license_header)
-         issue_files.push(file_name)
-      end
+   next unless file_name.end_with?('.cpp', '.cpp.in', '.h', '.h.in', '.inc', '.kt', '.kts', '.m', '.mm')
+   next unless File.file?(file_name)
+
+   file_content = File.read(file_name, mode: 'r:bom|utf-8')
+   match = license_header_regex.match(file_content)
+
+   if match.nil?
+      missing_header_files.push(file_name)
+      next
+   end
+
+   start_year = match[1].to_i
+   end_year = (match[2] || match[1]).to_i
+   unless (start_year..end_year).cover?(head_year)
+      stale_year_files.push(file_name)
    end
 end
 puts 'done'

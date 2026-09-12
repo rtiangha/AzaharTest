@@ -34,11 +34,13 @@
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.work.**
 
-# Prevents crashing when using Wini
--keep class org.ini4j.spi.IniParser
--keep class org.ini4j.spi.IniBuilder
--keep class org.ini4j.spi.IniFormatter
--keep class org.ini4j.spi.** { *; }
+# Keep rules for ini4j library
+-dontwarn java.beans.**
+-keep class java.beans.** { *; }
+
+# Alternative approach - suppress warnings for ini4j
+-dontwarn org.ini4j.**
+-keep class org.ini4j.** { *; }
 
 # Suppress warnings for R8
 -dontwarn org.bouncycastle.jsse.BCSSLParameters

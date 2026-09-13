@@ -488,6 +488,7 @@ void QtConfig::ReadCoreValues() {
 
     if (global) {
         ReadBasicSetting(Settings::values.use_cpu_jit);
+        ReadBasicSetting(Settings::values.use_fastinterp);
         ReadBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 
@@ -1086,6 +1087,7 @@ void QtConfig::SaveCoreValues() {
 
     if (global) {
         WriteBasicSetting(Settings::values.use_cpu_jit);
+        WriteBasicSetting(Settings::values.use_fastinterp);
         WriteBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 

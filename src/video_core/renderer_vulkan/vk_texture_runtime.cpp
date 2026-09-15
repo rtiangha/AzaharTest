@@ -607,7 +607,7 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
 
     const RecordParams params = {
         .aspect = source.Aspect(),
-        .filter = MakeFilter(source.pixel_format),
+        .filter = vk::Filter::eNearest,
         .pipeline_flags = source.PipelineStageFlags() | dest.PipelineStageFlags(),
         .src_access = source.AccessFlags(),
         .dst_access = dest.AccessFlags(),

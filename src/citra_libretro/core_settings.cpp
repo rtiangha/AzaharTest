@@ -178,6 +178,21 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::enabled
     },
     {
+        config::cpu::use_fastinterp,
+        "Use Fast Interpreter",
+        "Fast Interpreter",
+        "When the CPU JIT is disabled or unavailable, use the fast interpreter "
+        "instead of the legacy interpreter. Restart required.",
+        nullptr,
+        config::category::cpu,
+        {
+            { config::enabled, "Enabled" },
+            { config::disabled, "Disabled" },
+            { nullptr, nullptr }
+        },
+        config::enabled
+    },
+    {
         config::cpu::cpu_clock_percentage,
         "CPU Clock Speed",
         "CPU Clock Speed",

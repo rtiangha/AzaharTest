@@ -137,6 +137,11 @@ if (MSVC)
     add_subdirectory(getopt EXCLUDE_FROM_ALL)
 endif()
 
+# oboe
+if (ANDROID)
+    add_subdirectory(oboe)
+endif()
+
 # inih
 if(USE_SYSTEM_INIH)
     find_package(inih REQUIRED COMPONENTS inih inir)

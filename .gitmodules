@@ -112,3 +112,6 @@
 [submodule "externals/Anylinux-AppImages"]
 	path = externals/Anylinux-AppImages
 	url = https://github.com/pkgforge-dev/Anylinux-AppImages.git
+[submodule "externals/oboe"]
+	path = externals/oboe
+	url = https://github.com/google/oboe.git

@@ -1,16 +1,16 @@
-// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-import android.databinding.tool.ext.capitalizeUS
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Locale
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("de.undercouch.download") version "5.5.0"
+    id("de.undercouch.download") version "5.7.0"
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.4.20"
     id("androidx.navigation.safeargs.kotlin")
 }
 
@@ -20,23 +20,19 @@ plugins {
  * next 680 years.
  */
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
-val abiFilter = listOf("arm64-v8a", "x86_64")
+val abiFilter = listOf("arm64-v8a")
 
-val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/downloadedJniLibs"
+val downloadedJniLibsDir = layout.buildDirectory.dir("downloadedJniLibs")
 
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-35"
-    ndkVersion = "27.3.13750724"
+    compileSdk = 36
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     androidResources {
@@ -44,8 +40,10 @@ android {
     }
 
     packaging {
-        // This is necessary for libadrenotools custom driver loading
-        jniLibs.useLegacyPackaging = true
+        // Modern packaging options for native libraries
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     buildFeatures {
@@ -54,8 +52,7 @@ android {
     }
 
     lint {
-        // This is important as it will run lint but not abort on error
-        // Lint has some overly obnoxious "errors" that should really be warnings
+        // Run lint but do not abort on error
         abortOnError = false
     }
 
@@ -65,8 +62,8 @@ android {
         // applicationId = "org.azahar_emu.azahar"
         applicationId = "io.github.lime3ds.android"
 
-        minSdk = 28
-        targetSdk = 37
+        minSdk = 35 
+        targetSdk = 35
         versionCode = autoVersion
         versionName = getGitVersion()
 
@@ -80,9 +77,11 @@ android {
                 arguments(
                     "-DENABLE_QT=0", // Don't use QT
                     "-DENABLE_SDL2=0", // Don't use SDL
+                    "-DCMAKE_C_FLAGS=-O3 -march=armv8.2-a+crypto+dotprod+fp16+rcpc",
                     "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page
                     // sizes
+                    "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
                     "-DENABLE_GDBSTUB=OFF" // Disable GDB stub
                 )
             }
@@ -118,7 +117,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
@@ -131,21 +130,16 @@ android {
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
             isShrinkResources = true
-            // TODO: ^- Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android.txt"),
+                getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             isDefault = true
         }
 
         // Same as above, but with isDebuggable disabled.
-        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS)
-        // without constantly tripping over years-old and seemingly harmless memory bugs.
-        // We should fix those bugs eventually, but for now this exists as a workaround to
-        // allow other work to be done on these devices.
         register("relWithDebInfoLite") {
             initWith(getByName("relWithDebInfo"))
             signingConfig = signingConfigs.getByName("debug")
@@ -154,15 +148,12 @@ android {
                 enableBaselineProfile = false // Disabled by default when isDebuggable is true
             }
             lint {
-                checkReleaseBuilds = false // Ditto
-                // ^- The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+                checkReleaseBuilds = false
             }
         }
 
         // Signed by debug key disallowing distribution on Play Store.
-        // Attaches 'debug' suffix to version and package name, allowing installation alongside the release build.
         debug {
-            // TODO If this is ever modified, change application_id in debug/strings.xml
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             isDebuggable = true
@@ -181,7 +172,6 @@ android {
         register("googlePlay") {
             dimension = "version"
             versionNameSuffix = "-googleplay"
-            // applicationId = "io.github.lime3ds.android"
         }
     }
 
@@ -195,38 +185,44 @@ android {
     sourceSets {
         named("main") {
             // Set up path for downloaded native libraries
-            jniLibs.srcDir(downloadedJniLibsPath)
+            jniLibs.srcDir(downloadedJniLibsDir)
         }
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+    }
+}
 dependencies {
-    implementation("androidx.activity:activity-ktx:1.9.2")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("androidx.documentfile:documentfile:1.0.1")
-    implementation("androidx.fragment:fragment-ktx:1.8.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.5")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.8.0")
-    implementation("androidx.navigation:navigation-ui-ktx:2.8.0")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation("androidx.documentfile:documentfile:1.1.0")
+    implementation("androidx.fragment:fragment-ktx:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.10.1")
+    implementation("androidx.navigation:navigation-ui-ktx:2.10.1")
     implementation("androidx.preference:preference-ktx:1.2.1")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.slidingpanelayout:slidingpanelayout:1.2.0")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
     implementation("androidx.work:work-runtime:2.9.1")
-    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("info.debatty:java-string-similarity:2.0.0")
     implementation("io.coil-kt:coil:2.7.0")
-    implementation("org.ini4j:ini4j:0.5.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+    implementation("com.github.rtiangha:ini4j:53419ca3cd")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
     src(
-        "https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.313.0/android-binaries-1.4.313.0.zip"
+        "https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.357.0/android-binaries-1.4.357.0.zip"
     )
-    dest(file("${layout.buildDirectory.get().asFile.path}/tmp/Vulkan-ValidationLayers.zip"))
+    dest(layout.buildDirectory.file("tmp/Vulkan-ValidationLayers.zip"))
     onlyIfModified(true)
 }
 
@@ -234,13 +230,12 @@ val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanVal
 val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLayers") {
     dependsOn(downloadVulkanValidationLayers)
     from(zipTree(downloadVulkanValidationLayers.get().dest)) {
-        // Exclude the top level directory in the zip as it violates the expected jniLibs directory structure.
         eachFile {
             relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
         }
         includeEmptyDirs = false
     }
-    into(downloadedJniLibsPath)
+    into(downloadedJniLibsDir)
 }
 
 tasks.named("preBuild") {
@@ -286,7 +281,7 @@ fun runGitCommand(command: ProcessBuilder): String? {
 
         return if (process.exitValue() == 0) {
             inputStream.bufferedReader()
-                .use { it.readText().trim() } // return the value of gitHash
+                .use { it.readText().trim() }
         } else {
             val errorMessage = errorStream.bufferedReader().use { it.readText().trim() }
             logger.error("Error running git command: $errorMessage")
@@ -298,23 +293,35 @@ fun runGitCommand(command: ProcessBuilder): String? {
     }
 }
 
-android.applicationVariants.configureEach {
-    val variant = this
-    val capitalizedName = variant.name.capitalizeUS()
+// Rewritten using modern AndroidComponents API compatible with AGP 9.0+
+androidComponents.onVariants { variant ->
+    val capitalizedName = variant.name.replaceFirstChar { 
+        if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() 
+    }
 
-    val copyTask = tasks.register("copyBundle$capitalizedName") {
+//    val copyBundleTask = tasks.register("copyBundle$capitalizedName") {
+//        doLast {
+//            project.copy {
+//                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
+//                include("*.aab")
+//                into(layout.buildDirectory.dir("bundle"))
+//            }
+//        }
+//    }
+//    tasks.matching { it.name == "bundle$capitalizedName" }.configureEach {
+//        finalizedBy(copyBundleTask)
+//    }
+
+    val copyApkTask = tasks.register("copyApk$capitalizedName") {
         doLast {
             project.copy {
-                from(variant.outputs.first().outputFile.parentFile)
+                from(layout.buildDirectory.dir("outputs/apk/${variant.flavorName}/${variant.buildType}"))
                 include("*.apk")
-                into(layout.buildDirectory.dir("bundle"))
-            }
-            project.copy {
-                from(layout.buildDirectory.dir("outputs/bundle/${variant.name}"))
-                include("*.aab")
                 into(layout.buildDirectory.dir("bundle"))
             }
         }
     }
-    tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
+    tasks.matching { it.name == "assemble$capitalizedName" }.configureEach {
+        finalizedBy(copyApkTask)
+    }
 }

@@ -1,7 +1,7 @@
 #!/bin/sh -ex
 
-mkdir build
-cd build
+mkdir build-win
+cd build-win
 
 if [ "$GITHUB_REF_TYPE" == "tag" ]; then
 	export EXTRA_CMAKE_FLAGS=(-DENABLE_QT_UPDATE_CHECKER=ON)
@@ -11,6 +11,8 @@ cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_FLAGS="-march=skylake -O3 -mavx2 -ftree-vectorize" \
+    -DCMAKE_C_FLAGS="-march=skylake -O3 -mavx2 -ftree-vectorize" \
     -DENABLE_QT_TRANSLATION=ON \
     -DUSE_DISCORD_PRESENCE=ON \
 	"${EXTRA_CMAKE_FLAGS[@]}"

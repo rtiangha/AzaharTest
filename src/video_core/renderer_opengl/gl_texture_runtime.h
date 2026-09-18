@@ -8,6 +8,7 @@
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
 #include "video_core/rasterizer_cache/surface_base.h"
 #include "video_core/renderer_opengl/gl_blit_helper.h"
+#include "video_core/renderer_opengl/gl_driver.h"
 
 namespace VideoCore {
 struct Material;

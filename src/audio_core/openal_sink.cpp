@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+#include <mutex>
 #include <vector>
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -13,13 +15,13 @@
 namespace AudioCore {
 
 struct OpenALSink::Impl {
-    unsigned int sample_rate = 0;
-
     ALCdevice* device = nullptr;
     ALCcontext* context = nullptr;
     ALuint buffer = 0;
     ALuint source = 0;
+    bool initialized = false;
 
+    std::mutex mutex;
     std::function<void(s16*, std::size_t)> cb;
 
     static ALsizei Callback(void* impl_, void* buffer, ALsizei buffer_size_in_bytes);
@@ -73,6 +75,12 @@ OpenALSink::OpenALSink(std::string device_name) : impl(std::make_unique<Impl>())
 
     auto alBufferCallbackSOFT =
         reinterpret_cast<LPALBUFFERCALLBACKSOFT>(alGetProcAddress("alBufferCallbackSOFT"));
+    if (!alBufferCallbackSOFT) {
+        LOG_CRITICAL(Audio_Sink, "Failed to resolve alBufferCallbackSOFT proc address.");
+        Close();
+        return;
+    }
+
     alBufferCallbackSOFT(impl->buffer, AL_FORMAT_STEREO16, native_sample_rate,
                          reinterpret_cast<ALBUFFERCALLBACKTYPESOFT>(&Impl::Callback), impl.get());
 
@@ -109,6 +117,8 @@ OpenALSink::OpenALSink(std::string device_name) : impl(std::make_unique<Impl>())
         Close();
         return;
     }
+
+    impl->initialized = true;
 }
 
 OpenALSink::~OpenALSink() {
@@ -133,6 +143,7 @@ void OpenALSink::Close() {
         alcCloseDevice(impl->device);
         impl->device = nullptr;
     }
+    impl->initialized = false;
 }
 
 unsigned int OpenALSink::GetNativeSampleRate() const {
@@ -140,17 +151,32 @@ unsigned int OpenALSink::GetNativeSampleRate() const {
 }
 
 void OpenALSink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
-    impl->cb = cb;
+    std::lock_guard<std::mutex> lock(impl->mutex);
+    impl->cb = std::move(cb);
+}
+
+bool OpenALSink::IsInitialized() const {
+    return impl->initialized;
 }
 
 ALsizei OpenALSink::Impl::Callback(void* impl_, void* buffer, ALsizei buffer_size_in_bytes) {
-    auto impl = reinterpret_cast<Impl*>(impl_);
-    if (!impl || !impl->cb) {
+    auto* impl = static_cast<Impl*>(impl_);
+    if (!impl) {
         return 0;
     }
 
+    std::function<void(s16*, std::size_t)> callback;
+    {
+        std::lock_guard<std::mutex> lock(impl->mutex);
+        callback = impl->cb;
+    }
+    if (!callback) {
+        return 0;
+    }
+
+    // AL_FORMAT_STEREO16: 2 channels, 16-bit samples per channel.
     const std::size_t num_frames = buffer_size_in_bytes / (2 * sizeof(s16));
-    impl->cb(reinterpret_cast<s16*>(buffer), num_frames);
+    callback(reinterpret_cast<s16*>(buffer), num_frames);
 
     return buffer_size_in_bytes;
 }

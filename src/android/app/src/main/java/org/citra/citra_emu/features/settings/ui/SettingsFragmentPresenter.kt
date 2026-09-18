@@ -260,11 +260,10 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.frame_limit_slider,
                     R.string.frame_limit_slider_description,
                     1,
-                    9999,
+                    200,
                     "%",
                     IntSetting.FRAME_LIMIT.key,
-                    IntSetting.FRAME_LIMIT.defaultValue.toFloat(),
-                    showSlider = false
+                    IntSetting.FRAME_LIMIT.defaultValue.toFloat()
                 )
             )
             add(
@@ -272,12 +271,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT,
                     R.string.turbo_limit,
                     R.string.turbo_limit_description,
-                    1,
-                    9999,
+                    100,
+                    400,
                     "%",
                     IntSetting.TURBO_LIMIT.key,
-                    IntSetting.TURBO_LIMIT.defaultValue.toFloat(),
-                    showSlider = false
+                    IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
             if (!BuildUtil.isGooglePlayBuild

@@ -212,8 +212,8 @@ inline float Vec2<float>::Length() const {
 
 template <>
 inline float Vec2<float>::Normalize() {
-    float length = Length();
-    *this /= length;
+    const float length = Length();
+    *this *= 1.0f / length;
     return length;
 }
 
@@ -433,16 +433,15 @@ inline float Vec3<float>::Length() const {
 
 template <>
 inline Vec3<float> Vec3<float>::Normalized() const {
-    return *this / Length();
+    return *this * (1.0f / Length());
 }
 
 template <>
 inline float Vec3<float>::Normalize() {
-    float length = Length();
-    *this /= length;
+    const float length = Length();
+    *this *= 1.0f / length;
     return length;
 }
-
 using Vec3f = Vec3<float>;
 using Vec3i = Vec3<int>;
 using Vec3u = Vec3<unsigned int>;
